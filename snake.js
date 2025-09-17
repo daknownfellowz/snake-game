@@ -68,6 +68,18 @@ function drawGame() {
 }
 
 /**
+ * Wraps position around the canvas boundaries
+ * @param {Object} position - Position to wrap
+ * @returns {Object} Wrapped position
+ */
+function wrapPosition(position) {
+    return {
+        x: (position.x + canvas.width) % canvas.width,
+        y: (position.y + canvas.height) % canvas.height
+    };
+}
+
+/**
  * Updates snake position and handles eating food
  */
 function moveSnake() {
@@ -82,23 +94,49 @@ function moveSnake() {
         case 'right': head.x += GRID_SIZE; break;
     }
 
-    // Check for collisions with walls or self
-    if (isCollision(head)) {
+    // Wrap the snake's position around the canvas
+    const wrappedHead = wrapPosition(head);
+
+    // Check for collisions with self or obstacles
+    if (isCollision(wrappedHead)) {
         gameOver();
         return;
     }
 
-    // Add new head to beginning of snake array
-    snake.unshift(head);
+    // Add wrapped head to beginning of snake array
+    snake.unshift(wrappedHead);
 
     // Handle food collision
-    if (head.x === food.x && head.y === food.y) {
+    if (wrappedHead.x === food.x && wrappedHead.y === food.y) {
         food = generateFood();    // Generate new food
         score += 10;              // Increment score
         scoreElement.textContent = score;
     } else {
         snake.pop();             // Remove tail if no food eaten
     }
+}
+
+/**
+ * Checks if the given position collides with snake body or obstacles
+ * @param {Object} position - Position to check for collision
+ * @returns {boolean} True if collision detected
+ */
+function isCollision(position) {
+    // Check for collision with snake body
+    if (snake.some(segment => 
+        segment.x === position.x && segment.y === position.y
+    )) {
+        return true;
+    }
+
+    // Check for collision with obstacles
+    if (obstacles.some(obs =>
+        obs.x === position.x && obs.y === position.y
+    )) {
+        return true;
+    }
+
+    return false;
 }
 
 /**
